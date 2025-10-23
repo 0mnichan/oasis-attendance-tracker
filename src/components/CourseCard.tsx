@@ -14,18 +14,18 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
   
   return (
     <Card 
-      className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/50"
+      className="cursor-pointer transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:border-primary/50 active:scale-95"
       onClick={onClick}
     >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-base mb-1">{course.code}</CardTitle>
-            <p className="text-sm text-muted-foreground line-clamp-2">{course.name}</p>
+      <CardHeader className="pb-2 sm:pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-sm sm:text-base mb-1">{course.code}</CardTitle>
+            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{course.name}</p>
           </div>
           <ProgressRing 
             progress={course.percentage} 
-            size={60} 
+            size={window.innerWidth < 640 ? 50 : 60} 
             strokeWidth={5}
           />
         </div>

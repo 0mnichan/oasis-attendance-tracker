@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TermsDialogProps {
   open: boolean;
@@ -20,7 +19,6 @@ interface TermsDialogProps {
 const TermsDialog: React.FC<TermsDialogProps> = ({ open, onAccept, onDecline }) => {
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
   const [dontShowAgain, setDontShowAgain] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -30,7 +28,7 @@ const TermsDialog: React.FC<TermsDialogProps> = ({ open, onAccept, onDecline }) 
   }, [open]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
-    const target = event.target as HTMLDivElement;
+    const target = event.currentTarget;
     const bottom = Math.abs(target.scrollHeight - target.scrollTop - target.clientHeight) < 10;
     if (bottom && !hasScrolledToBottom) {
       setHasScrolledToBottom(true);
@@ -47,7 +45,10 @@ const TermsDialog: React.FC<TermsDialogProps> = ({ open, onAccept, onDecline }) 
           </DialogDescription>
         </DialogHeader>
         
-        <ScrollArea className="flex-1 pr-4" onScrollCapture={handleScroll}>
+        <div 
+          className="flex-1 overflow-y-auto pr-4 max-h-[50vh]" 
+          onScroll={handleScroll}
+        >
           <div className="space-y-4 text-sm">
             <section>
               <h3 className="font-semibold text-base mb-2">1. Acceptance of Terms</h3>
@@ -130,7 +131,7 @@ const TermsDialog: React.FC<TermsDialogProps> = ({ open, onAccept, onDecline }) 
               <p className="text-xs">Last updated: {new Date().toLocaleDateString()}</p>
             </div>
           </div>
-        </ScrollArea>
+        </div>
 
         {!hasScrolledToBottom && (
           <p className="text-sm text-muted-foreground text-center animate-pulse">

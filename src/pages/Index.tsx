@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Index = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -32,7 +31,7 @@ const Index = () => {
               Please read our terms and conditions
             </DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[60vh] pr-4">
+          <div className="overflow-y-auto max-h-[60vh] pr-4">
             <div className="space-y-4 text-sm">
               <section>
                 <h3 className="font-semibold text-base mb-2">1. Acceptance of Terms</h3>
@@ -104,7 +103,7 @@ const Index = () => {
                 </p>
               </section>
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
 

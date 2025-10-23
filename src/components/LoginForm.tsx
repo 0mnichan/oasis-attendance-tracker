@@ -1,21 +1,47 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useToast } from '@/hooks/use-toast';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingSpinner from './LoadingSpinner';
+import TermsDialog from './TermsDialog';
 
 const LoginForm: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const hasAcceptedTerms = localStorage.getItem('termsAccepted');
+    if (!hasAcceptedTerms) {
+      setShowTerms(true);
+    }
+  }, []);
   
+  const handleTermsAccept = (dontShowAgain: boolean) => {
+    if (dontShowAgain) {
+      localStorage.setItem('termsAccepted', 'true');
+    }
+    setShowTerms(false);
+  };
+
+  const handleTermsDecline = () => {
+    setShowTerms(false);
+    toast.error('You must accept the terms to use OASIS');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const hasAcceptedTerms = localStorage.getItem('termsAccepted');
+    if (!hasAcceptedTerms) {
+      setShowTerms(true);
+      return;
+    }
     
     if (!userId || !password) {
       toast.error('Please fill in all fields');
@@ -50,7 +76,13 @@ const LoginForm: React.FC = () => {
   };
   
   return (
-    <Card className="w-full max-w-md mx-auto glass-panel animate-scale-in">
+    <>
+      <TermsDialog 
+        open={showTerms}
+        onAccept={handleTermsAccept}
+        onDecline={handleTermsDecline}
+      />
+      <Card className="w-full max-w-md mx-auto glass-panel animate-scale-in">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-semibold">Login to OASIS</CardTitle>
         <CardDescription>
@@ -109,6 +141,7 @@ const LoginForm: React.FC = () => {
         </Button>
       </CardFooter>
     </Card>
+    </>
   );
 };
 

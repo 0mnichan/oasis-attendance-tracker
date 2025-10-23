@@ -111,4 +111,11 @@
     transform: rotate(-90deg);
     transform-origin: 50% 50%;
   }
+
+  .bg-grid-pattern {
+    background-image: 
+      linear-gradient(to right, hsl(var(--border)) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border)) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
 }

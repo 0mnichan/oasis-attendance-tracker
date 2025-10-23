@@ -34,7 +34,7 @@ export const useAttendance = () => {
       try {
         // In a real application, this would be an API call
         // For demo purposes, we'll simulate a delay and return mock data
-        await new Promise(resolve => setTimeout(resolve, 1800));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         // Mock data
         const mockData: AttendanceData = {

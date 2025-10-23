@@ -1,56 +1,60 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Course } from "@/hooks/useAttendance";
+import { Course } from '@/hooks/useAttendance';
 import ProgressRing from './ProgressRing';
-import { cn } from '@/lib/utils';
+import { TrendingUp, TrendingDown, AlertCircle } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 
 interface CourseCardProps {
   course: Course;
-  className?: string;
+  onClick: () => void;
 }
 
-const CourseCard: React.FC<CourseCardProps> = ({ course, className }) => {
-  const getStatusColor = () => {
-    if (course.percentage < course.minRequired) return 'bg-destructive/10 text-destructive';
-    if (course.percentage <= course.minRequired + 5) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400';
-    return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
-  };
-  
-  const getStatusText = () => {
-    if (course.canSkip < 0) return `Need to attend ${Math.abs(course.canSkip)} more`;
-    if (course.canSkip === 0) return 'On threshold';
-    return `Can skip ${course.canSkip} classes`;
-  };
+const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
+  const attendanceStatus = course.percentage >= 75 ? 'good' : 'warning';
   
   return (
-    <Card className={cn("overflow-hidden card-hover border", className)}>
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <div className="text-xs font-medium text-muted-foreground mb-1">{course.code}</div>
-            <CardTitle className="text-base font-medium">{course.name}</CardTitle>
+    <Card 
+      className="cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1 hover:border-primary/50"
+      onClick={onClick}
+    >
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-base mb-1">{course.code}</CardTitle>
+            <p className="text-sm text-muted-foreground line-clamp-2">{course.name}</p>
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4 pt-2">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <div className="text-sm">
-              <span className="text-muted-foreground">Attended: </span>
-              <span className="font-medium">{course.attended}/{course.total}</span>
-            </div>
-            <div className={cn("text-xs px-2 py-1 rounded-full inline-block", getStatusColor())}>
-              {getStatusText()}
-            </div>
-          </div>
-          
           <ProgressRing 
             progress={course.percentage} 
-            size={64} 
+            size={60} 
             strokeWidth={5}
-            threshold={course.minRequired}
           />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Attendance</span>
+            <span className="font-semibold">{course.attended}/{course.total}</span>
+          </div>
+          
+          <div className="pt-3 border-t">
+            {course.canSkip > 0 ? (
+              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                <TrendingUp className="w-4 h-4" />
+                <span className="text-sm font-medium">Can skip {course.canSkip} {course.canSkip === 1 ? 'class' : 'classes'}</span>
+              </div>
+            ) : course.canSkip === 0 ? (
+              <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+                <AlertCircle className="w-4 h-4" />
+                <span className="text-sm font-medium">At threshold</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-destructive">
+                <TrendingDown className="w-4 h-4" />
+                <span className="text-sm font-medium">Need {Math.abs(course.canSkip)} more</span>
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>

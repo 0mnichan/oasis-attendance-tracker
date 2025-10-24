@@ -13,6 +13,13 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CourseDetailDialogProps {
   course: Course | null;
@@ -21,16 +28,25 @@ interface CourseDetailDialogProps {
 }
 
 const CourseDetailDialog: React.FC<CourseDetailDialogProps> = ({ course, open, onClose }) => {
-  const [classesToMiss, setClassesToMiss] = useState(0);
-  const [classesToAttend, setClassesToAttend] = useState(0);
+  const [action, setAction] = useState<'miss' | 'attend'>('miss');
+  const [hours, setHours] = useState(0);
   
   if (!course) return null;
   
   // Calculate attendance after simulation
   const simulateAttendance = () => {
-    const totalAfter = course.total + classesToMiss + classesToAttend;
-    const attendedAfter = course.attended + classesToAttend;
-    const percentageAfter = (attendedAfter / totalAfter) * 100;
+    let totalAfter = course.total;
+    let attendedAfter = course.attended;
+    
+    if (action === 'miss') {
+      totalAfter = course.total + hours;
+      attendedAfter = course.attended;
+    } else {
+      totalAfter = course.total + hours;
+      attendedAfter = course.attended + hours;
+    }
+    
+    const percentageAfter = totalAfter > 0 ? (attendedAfter / totalAfter) * 100 : 0;
     return {
       total: totalAfter,
       attended: attendedAfter,
@@ -87,38 +103,34 @@ const CourseDetailDialog: React.FC<CourseDetailDialogProps> = ({ course, open, o
               <h3 className="text-base sm:text-lg font-semibold">Attendance Calculator</h3>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="miss">Classes to Miss</Label>
-                <Input
-                  id="miss"
-                  type="number"
-                  min="0"
-                  value={classesToMiss}
-                  onChange={(e) => setClassesToMiss(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="text-lg"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="attend">Classes to Attend</Label>
-                <Input
-                  id="attend"
-                  type="number"
-                  min="0"
-                  value={classesToAttend}
-                  onChange={(e) => setClassesToAttend(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="text-lg"
-                />
-              </div>
+            <div className="flex flex-wrap items-center gap-2 text-sm sm:text-base">
+              <span className="text-muted-foreground">If you</span>
+              <Select value={action} onValueChange={(value: 'miss' | 'attend') => setAction(value)}>
+                <SelectTrigger className="w-[120px] h-10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="miss">miss</SelectItem>
+                  <SelectItem value="attend">attend</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input
+                type="number"
+                min="0"
+                value={hours || ''}
+                onChange={(e) => setHours(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-[100px] h-10 text-center text-lg font-semibold"
+                placeholder="0"
+              />
+              <span className="text-muted-foreground">hours</span>
             </div>
 
             <Button 
               variant="outline" 
               className="w-full"
               onClick={() => {
-                setClassesToMiss(0);
-                setClassesToAttend(0);
+                setHours(0);
+                setAction('miss');
               }}
             >
               Reset
@@ -139,7 +151,7 @@ const CourseDetailDialog: React.FC<CourseDetailDialogProps> = ({ course, open, o
                   Below minimum requirement of {course.minRequired}%
                 </p>
               )}
-              {parseFloat(simulation.percentage) >= course.minRequired && (classesToMiss > 0 || classesToAttend > 0) && (
+              {parseFloat(simulation.percentage) >= course.minRequired && hours > 0 && (
                 <p className="text-sm text-green-600 dark:text-green-400 mt-2 flex items-center gap-1">
                   <CheckCircle2 className="w-4 h-4" />
                   Above minimum requirement!

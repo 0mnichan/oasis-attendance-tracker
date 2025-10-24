@@ -30,11 +30,13 @@ const UpcomingClass: React.FC<UpcomingClassProps> = ({ course }) => {
         
         <div className="pt-4 sm:pt-5 border-t">
           <div className="flex items-center justify-between mb-4">
-            <p className="text-sm sm:text-base text-muted-foreground">Attendance Percentage</p>
             <div className="flex items-center gap-3">
-              <p className="text-3xl sm:text-4xl font-bold">{course.percentage.toFixed(1)}%</p>
+              <div className="text-left">
+                <p className="text-xs text-muted-foreground mb-1">Attendance Percentage</p>
+                <p className="text-3xl sm:text-4xl font-bold">{course.percentage.toFixed(1)}%</p>
+              </div>
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">Classes Attended</p>
+                <p className="text-xs text-muted-foreground mb-1">Classes Attended</p>
                 <p className="text-3xl sm:text-4xl font-bold">{course.attended}/{course.total}</p>
               </div>
             </div>

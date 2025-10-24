@@ -36,42 +36,42 @@ const Index = () => {
               <section>
                 <h3 className="font-semibold text-base mb-2">1. Acceptance of Terms</h3>
                 <p className="text-muted-foreground">
-                  By accessing and using OASIS (Optimal Attendance System for SRM Students), you accept and agree to be bound by these terms and conditions.
+                  By accessing and using OASYS (Optimal Attendance SYStem), you accept and agree to be bound by these terms and conditions.
                 </p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-base mb-2">2. Service Description</h3>
                 <p className="text-muted-foreground">
-                  OASIS is an unofficial attendance tracking tool designed for SRM University students. It provides attendance statistics, visualizations, and planning features to help students manage their attendance requirements.
+                  OASYS is an unofficial attendance tracking tool designed for SRM Ramapuram Students. It provides attendance statistics, visualizations, and planning features to help students manage their attendance requirements.
                 </p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-base mb-2">3. Credential Handling</h3>
                 <p className="text-muted-foreground">
-                  Your SRM credentials (User ID and Password) are used solely to fetch your attendance data from the official SRM portal. We DO NOT store, save, or transmit your credentials to any third-party servers.
+                  Your SRM credentials (NetID and Password) are used solely to fetch your attendance data from the official SRM portal. We DO NOT store, save, or transmit your credentials to any third-party servers.
                 </p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-base mb-2">4. Data Privacy</h3>
                 <p className="text-muted-foreground">
-                  Your attendance data is processed locally in your browser. We do not collect, store, or share any personal information or attendance records with third parties.
+                  We do not collect, store, or share any personal information or attendance records with third parties.
                 </p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-base mb-2">5. Unofficial Service</h3>
                 <p className="text-muted-foreground">
-                  OASIS is NOT affiliated with, endorsed by, or officially connected to SRM University in any way.
+                  OASYS is NOT affiliated with, endorsed by, or officially connected to SRMIST in any way.
                 </p>
               </section>
 
               <section>
                 <h3 className="font-semibold text-base mb-2">6. Accuracy Disclaimer</h3>
                 <p className="text-muted-foreground">
-                  While we strive for accuracy, OASIS provides attendance information "as is" without any guarantees. Always verify critical attendance information with official SRM sources.
+                  While we strive for accuracy, OASYS provides attendance information "as is" without any guarantees. Always verify critical attendance information with official SRM sources.
                 </p>
               </section>
 
@@ -92,12 +92,19 @@ const Index = () => {
               <section>
                 <h3 className="font-semibold text-base mb-2">9. Limitation of Liability</h3>
                 <p className="text-muted-foreground">
-                  The creators of OASIS shall not be liable for any damages arising from your use of this service, including academic consequences from attendance miscalculations.
+                  The creators of OASYS shall not be liable for any damages arising from your use of this service, including academic consequences from attendance miscalculations.
                 </p>
               </section>
 
               <section>
-                <h3 className="font-semibold text-base mb-2">10. Changes to Terms</h3>
+                <h3 className="font-semibold text-base mb-2">10. Limitation of Responsibility</h3>
+                <p className="text-muted-foreground">
+                  We are not liable for any misuse of the application, unauthorized access, or credential-related incidents. By using this application, you acknowledge that you do so at your own risk.
+                </p>
+              </section>
+
+              <section>
+                <h3 className="font-semibold text-base mb-2">11. Changes to Terms</h3>
                 <p className="text-muted-foreground">
                   We reserve the right to modify these terms at any time. Continued use constitutes acceptance of modified terms.
                 </p>
@@ -165,9 +172,9 @@ const Index = () => {
           <div className="mt-8 text-center text-xs text-muted-foreground animate-fade-in max-w-2xl" style={{ animationDelay: '0.6s' }}>
             <p className="flex items-center justify-center gap-1 mb-2">
               <Shield className="w-3 h-3" />
-              Your credentials are only used to fetch attendance data and are never stored
+              Your credentials are only used to fetch attendance data and are never stored.
             </p>
-            <p>This is an unofficial tool and is not affiliated with SRM University</p>
+            <p>This is an unofficial tool and is not affiliated with SRMIST or any other entity.</p>
           </div>
         </div>
       </div>

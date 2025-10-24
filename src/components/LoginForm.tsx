@@ -1,202 +1,198 @@
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import LoadingSpinner from './LoadingSpinner';
-import TermsDialog from './TermsDialog';
+const API = ""; // leave empty - relative calls to same origin
+
+const getOrCreateUserId = () => {
+  const key = "oasys_user_id";
+  let id = sessionStorage.getItem(key);
+  if (!id) {
+    id = Math.random().toString(36).substring(2, 10);
+    sessionStorage.setItem(key, id);
+  }
+  return id;
+};
 
 const LoginForm: React.FC = () => {
-  const [userId, setUserId] = useState('');
-  const [password, setPassword] = useState('');
-  const [captchaInput, setCaptchaInput] = useState('');
-  const [captchaCode, setCaptchaCode] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [showTerms, setShowTerms] = useState(true); // Show T&C first
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
+  const [netid, setNetid] = useState("");
+  const [password, setPassword] = useState("");
+  const [captcha, setCaptcha] = useState("");
+  const [captchaImg, setCaptchaImg] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [captchaLoading, setCaptchaLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Generate random captcha code
-  const generateCaptcha = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let code = '';
-    for (let i = 0; i < 6; i++) {
-      code += chars.charAt(Math.floor(Math.random() * chars.length));
+  const userId = React.useMemo(() => getOrCreateUserId(), []);
+
+  const fetchCaptcha = async (start = false) => {
+    setCaptchaLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API}/start_login/`, {
+        method: "POST",
+        body: new URLSearchParams({ user_id: userId }),
+      });
+      if (!res.ok) throw new Error("Failed to get captcha");
+      const data = await res.json();
+      setCaptchaImg(`data:image/png;base64,${data.captcha_image}`);
+      if (start) setCaptcha("");
+    } catch (err: any) {
+      console.error("fetchCaptcha:", err);
+      setError("Could not load captcha. Try again.");
+    } finally {
+      setCaptchaLoading(false);
     }
-    setCaptchaCode(code);
-    setCaptchaInput('');
   };
 
-  useEffect(() => {
-    generateCaptcha();
-  }, []);
-  
-  const handleTermsAccept = (dontShowAgain: boolean) => {
-    if (dontShowAgain) {
-      localStorage.setItem('termsAccepted', 'true');
+  const refreshCaptcha = async () => {
+    setCaptchaLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API}/refresh_captcha/`, {
+        method: "POST",
+        body: new URLSearchParams({ user_id: userId }),
+      });
+      if (!res.ok) throw new Error("Failed to refresh captcha");
+      const data = await res.json();
+      setCaptchaImg(`data:image/png;base64,${data.captcha_image}`);
+      setCaptcha("");
+    } catch (err: any) {
+      console.error("refreshCaptcha:", err);
+      setError("Could not refresh captcha. Try again.");
+    } finally {
+      setCaptchaLoading(false);
     }
-    setTermsAccepted(true);
-    setShowTerms(false);
-  };
-
-  const handleTermsDecline = () => {
-    toast.error('You must accept the terms to use OASIS');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!termsAccepted) {
-      toast.error('Please accept the terms and conditions first');
+    setError(null);
+
+    if (!netid || !password || !captcha) {
+      setError("Please fill all fields");
       return;
     }
-    
-    if (!userId || !password) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-    
-    if (captchaInput !== captchaCode) {
-      toast.error('Invalid captcha code');
-      generateCaptcha();
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    // Simulate API call
+
+    setLoading(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // In a real application, you would call your API here
-      // For now, we'll just redirect
-      
-      toast.success('Successfully logged in', {
-        description: 'Welcome to OASIS',
+      const res = await fetch(`${API}/submit_login/`, {
+        method: "POST",
+        body: new URLSearchParams({
+          user_id: userId,
+          netid,
+          password,
+          captcha,
+        }),
       });
-      
-      // Navigate to dashboard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 500);
-      
-    } catch (error) {
-      toast.error('Failed to login', {
-        description: 'Please check your credentials',
-      });
+
+      const html = await res.text();
+
+      if (res.ok) {
+        sessionStorage.setItem("attendanceHTML", html);
+        sessionStorage.setItem("oasys_netid", netid);
+        navigate("/dashboard");
+      } else {
+        setError("Login failed — check credentials or captcha.");
+        await fetchCaptcha();
+      }
+    } catch (err: any) {
+      console.error("submit_login:", err);
+      setError("Network error. Try again.");
+      await fetchCaptcha();
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
-  
+
+  useEffect(() => {
+    fetchCaptcha(true);
+  }, []);
+
   return (
-    <>
-      <TermsDialog 
-        open={showTerms}
-        onAccept={handleTermsAccept}
-        onDecline={handleTermsDecline}
-      />
-      <Card className="w-full max-w-md mx-auto glass-panel animate-scale-in">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-semibold">Login to OASIS</CardTitle>
-        <CardDescription>
-          Enter your SRM credentials to access your attendance
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="userId" className="text-sm font-medium">
-              SRM User ID
-            </label>
-            <Input
-              id="userId"
-              placeholder="Enter your registration number"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              disabled={isLoading}
-              className="transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={isLoading}
-              className="transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Your credentials are not stored by this application.
-            </p>
-          </div>
-          
-          <div className="space-y-2">
-            <label htmlFor="captcha" className="text-sm font-medium">
-              Enter Captcha
-            </label>
-            <div className="space-y-3">
-              <div className="bg-muted p-4 rounded-lg border-2 border-border flex items-center justify-between">
-                <div 
-                  className="font-mono text-2xl font-bold tracking-wider select-none"
-                  style={{
-                    fontFamily: 'Courier New, monospace',
-                    letterSpacing: '0.3em',
-                    textDecoration: 'line-through wavy',
-                    textDecorationColor: 'hsl(var(--primary))',
-                    color: 'hsl(var(--foreground))',
-                  }}
-                >
-                  {captchaCode}
-                </div>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={generateCaptcha}
-                  className="ml-2"
-                >
-                  Change
-                </Button>
-              </div>
-              <Input
-                id="captcha"
-                placeholder="Enter the captcha code"
-                value={captchaInput}
-                onChange={(e) => setCaptchaInput(e.target.value)}
-                disabled={isLoading}
-                className="transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary font-mono tracking-wider"
-              />
-            </div>
-          </div>
-        </form>
-      </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={handleSubmit}
-          disabled={isLoading}
-          className="w-full relative overflow-hidden group"
-        >
-          <span className={`transition-all duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-            Sign In
-          </span>
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <LoadingSpinner size="sm" />
+    <div className="flex justify-center mt-4 mb-4">
+      <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-xl rounded-xl p-6 border border-gray-200 dark:border-gray-700 transition-colors">
+        <h1 className="text-2xl font-semibold text-center mb-5 text-gray-900 dark:text-white">
+          Sign In
+        </h1>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          {error && (
+            <div className="text-sm text-red-600 bg-red-100 dark:bg-red-600/20 p-2 rounded text-center">
+              {error}
             </div>
           )}
-          <span className="absolute bottom-0 left-0 w-full h-1 bg-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></span>
-        </Button>
-      </CardFooter>
-    </Card>
-    </>
+
+          <input
+            type="text"
+            placeholder="SRM NetID"
+            value={netid}
+            onChange={(e) => setNetid(e.target.value)}
+            className="w-full p-2 border rounded-md bg-gray-50 text-gray-900 placeholder:text-gray-500 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition 
+                       dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+            autoComplete="username"
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 border rounded-md bg-gray-50 text-gray-900 placeholder:text-gray-500 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition 
+                       dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+            autoComplete="current-password"
+          />
+
+          {/* Captcha Box */}
+          <div className="flex items-center justify-between border rounded-md bg-gray-50 dark:bg-gray-800 p-2">
+            {captchaLoading ? (
+              <div className="h-10 w-24 flex items-center justify-center text-xs text-gray-500 dark:text-gray-400">
+                Loading...
+              </div>
+            ) : captchaImg ? (
+              <img
+                src={captchaImg}
+                alt="Captcha"
+                className="h-10 w-auto rounded-md border bg-white dark:bg-gray-900"
+              />
+            ) : (
+              <div className="h-10 w-24 border rounded bg-gray-100 dark:bg-gray-700" />
+            )}
+
+            <button
+              type="button"
+              onClick={refreshCaptcha}
+              className="text-sm px-2 py-1 rounded-md text-blue-600 hover:bg-blue-50 
+                         dark:text-blue-400 dark:hover:bg-gray-700 transition"
+              disabled={captchaLoading}
+            >
+              Change
+            </button>
+          </div>
+
+          <input
+            type="text"
+            placeholder="Enter the captcha code"
+            value={captcha}
+            onChange={(e) => setCaptcha(e.target.value)}
+            className="w-full p-2 border rounded-md bg-gray-50 text-gray-900 placeholder:text-gray-500 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 transition 
+                       dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-md font-medium hover:bg-blue-700 
+                       transition disabled:opacity-60 dark:bg-blue-600 dark:hover:bg-blue-500"
+          >
+            {loading ? "Logging in..." : "Sign In"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 };
 

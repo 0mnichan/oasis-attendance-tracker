@@ -1,16 +1,14 @@
+import { useEffect, useState } from "react";
 
-import { useState, useEffect } from 'react';
-
-// Types
 export interface Course {
   id: string;
-  code: string;
+  code?: string;
   name: string;
   attended: number;
   total: number;
   percentage: number;
-  minRequired: number;
-  canSkip: number;
+  action: string;
+  canSkip?: number;
 }
 
 interface AttendanceData {
@@ -19,6 +17,7 @@ interface AttendanceData {
   totalClassesAttended: number;
   totalClassesHeld: number;
   lastUpdated: Date;
+  period?: string; // 👈 new field for "18/Jul/2025 to 24/Oct/2025"
 }
 
 export const useAttendance = () => {
@@ -27,95 +26,105 @@ export const useAttendance = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchAttendance = async () => {
+    const parseFromHTML = (html: string): AttendanceData => {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const table = doc.querySelector("table");
+      if (!table) throw new Error("Attendance table not found in HTML");
+
+      // ✅ Extract "During the Period" text
+      let periodText = "";
+      const header = doc.querySelector(".card-header");
+      if (header) {
+        const match = header.textContent?.match(/During the Period:\s*(.*)/i);
+        if (match) {
+          periodText = match[1]
+            .replace(/To/gi, "to")
+            .replace(/\s+/g, " ")
+            .trim();
+        }
+      }
+
+      const rows = Array.from(table.querySelectorAll("tr")).slice(1);
+
+      const courses: Course[] = [];
+      let totalHeld = 0;
+      let totalAttended = 0;
+
+      for (const row of rows) {
+        const cols = Array.from(row.querySelectorAll("td"));
+        if (cols.length < 4) continue;
+
+        const code = cols[0]?.textContent?.trim() || "Unknown";
+        if (code.toLowerCase().includes("total")) continue;
+
+        const name = cols[1]?.textContent?.trim() || "";
+        const total = parseInt(cols[2]?.textContent?.trim() || "0");
+        const attended = parseInt(cols[3]?.textContent?.trim() || "0");
+        const actionText = cols[cols.length - 1]?.textContent?.trim() || "";
+
+        const percentage = total ? (attended / total) * 100 : 0;
+
+        let canSkip: number | undefined = undefined;
+        const canBunkMatch = actionText.match(/Can\s+.*?(\d+)\s*(?:hrs|classes)?/i);
+        const attendNeedMatch = actionText.match(/Attend\s+(\d+)\s*(?:hrs|classes)?/i);
+        const exactMatch = /Exactly/i.test(actionText);
+
+        if (canBunkMatch) {
+          canSkip = parseInt(canBunkMatch[1], 10);
+        } else if (attendNeedMatch) {
+          canSkip = -parseInt(attendNeedMatch[1], 10);
+        } else if (exactMatch) {
+          canSkip = 0;
+        }
+
+        courses.push({
+          id: code,
+          code,
+          name,
+          attended,
+          total,
+          percentage: Math.round(percentage * 100) / 100,
+          action: actionText,
+          canSkip,
+        });
+
+        totalHeld += total;
+        totalAttended += attended;
+      }
+
+      const overallPercentage = totalHeld ? (totalAttended / totalHeld) * 100 : 0;
+
+      return {
+        courses,
+        overallPercentage: Math.round(overallPercentage * 100) / 100,
+        totalClassesAttended: totalAttended,
+        totalClassesHeld: totalHeld,
+        lastUpdated: new Date(),
+        period: periodText,
+      };
+    };
+
+    try {
       setIsLoading(true);
       setError(null);
-      
-      try {
-        // In a real application, this would be an API call
-        // For demo purposes, we'll simulate a delay and return mock data
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        // Mock data
-        const mockData: AttendanceData = {
-          courses: [
-            {
-              id: '1',
-              code: 'CSE1001',
-              name: 'Introduction to Programming',
-              attended: 28,
-              total: 32,
-              percentage: 87.5,
-              minRequired: 75,
-              canSkip: 4,
-            },
-            {
-              id: '2',
-              code: 'MAT2002',
-              name: 'Discrete Mathematics',
-              attended: 18,
-              total: 24,
-              percentage: 75,
-              minRequired: 75,
-              canSkip: 0,
-            },
-            {
-              id: '3',
-              code: 'CSE2005',
-              name: 'Operating Systems',
-              attended: 24,
-              total: 30,
-              percentage: 80,
-              minRequired: 75,
-              canSkip: 1,
-            },
-            {
-              id: '4',
-              code: 'PHY1001',
-              name: 'Physics',
-              attended: 15,
-              total: 24,
-              percentage: 62.5,
-              minRequired: 75,
-              canSkip: -3, // Negative means they need to attend more
-            },
-            {
-              id: '5',
-              code: 'ENG2001',
-              name: 'Technical English',
-              attended: 22,
-              total: 26,
-              percentage: 84.6,
-              minRequired: 75,
-              canSkip: 2,
-            },
-            {
-              id: '6',
-              code: 'CSE3001',
-              name: 'Data Structures',
-              attended: 30,
-              total: 32,
-              percentage: 93.75,
-              minRequired: 75,
-              canSkip: 6,
-            },
-          ],
-          overallPercentage: 80.5,
-          totalClassesAttended: 137,
-          totalClassesHeld: 168,
-          lastUpdated: new Date(),
-        };
-        
-        setData(mockData);
-      } catch (err) {
-        setError('Failed to fetch attendance data');
-        console.error(err);
-      } finally {
+      const html = sessionStorage.getItem("attendanceHTML");
+      if (!html) {
+        setError("No attendance data found. Please login first.");
+        setData(null);
         setIsLoading(false);
+        return;
       }
-    };
-    
-    fetchAttendance();
+
+      const parsed = parseFromHTML(html);
+      setData(parsed);
+    } catch (err: any) {
+      console.error("useAttendance parse error:", err);
+      setError("Failed to parse attendance data.");
+      setData(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   return { data, isLoading, error };

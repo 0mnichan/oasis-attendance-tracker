@@ -32,9 +32,15 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Attendance</span>
-            <span className="font-semibold">{course.attended}/{course.total}</span>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col items-center">
+              <span className="text-2xl sm:text-3xl font-bold">{course.percentage.toFixed(1)}%</span>
+              <span className="text-xs text-muted-foreground mt-1">Attendance</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-2xl sm:text-3xl font-bold">{course.attended}/{course.total}</span>
+              <span className="text-xs text-muted-foreground mt-1">Classes</span>
+            </div>
           </div>
           
           <div className="pt-3 border-t">

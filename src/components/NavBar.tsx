@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import Timetable from './Timetable';
 
 interface NavBarProps {
   className?: string;
@@ -31,7 +31,8 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
           <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">Beta</span>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Timetable />
           <ThemeToggle />
           <Button 
             variant="ghost" 

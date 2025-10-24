@@ -1,10 +1,11 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from "@/lib/utils";
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Calendar } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import TimetableDialog from './TimetableDialog';
 
 interface NavBarProps {
   className?: string;
@@ -12,6 +13,7 @@ interface NavBarProps {
 
 const NavBar: React.FC<NavBarProps> = ({ className }) => {
   const navigate = useNavigate();
+  const [showTimetable, setShowTimetable] = useState(false);
   
   const handleLogout = () => {
     // Simulate logout
@@ -32,6 +34,15 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowTimetable(true)}
+            className="text-muted-foreground hover:text-foreground hover:bg-primary/10 transition-all"
+          >
+            <Calendar className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Timetable</span>
+          </Button>
           <ThemeToggle />
           <Button 
             variant="ghost" 
@@ -44,6 +55,8 @@ const NavBar: React.FC<NavBarProps> = ({ className }) => {
           </Button>
         </div>
       </div>
+      
+      <TimetableDialog open={showTimetable} onOpenChange={setShowTimetable} />
     </header>
   );
 };

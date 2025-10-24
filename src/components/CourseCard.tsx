@@ -20,8 +20,7 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
       <CardHeader className="pb-2 sm:pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm sm:text-base mb-1">{course.code}</CardTitle>
-            <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">{course.name}</p>
+            <CardTitle className="text-sm sm:text-base mb-1 line-clamp-2">{course.name}</CardTitle>
           </div>
           <ProgressRing 
             progress={course.percentage} 
@@ -32,8 +31,8 @@ const CourseCard: React.FC<CourseCardProps> = ({ course, onClick }) => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Attendance</span>
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-semibold">{course.percentage.toFixed(1)}%</span>
             <span className="font-semibold">{course.attended}/{course.total}</span>
           </div>
           

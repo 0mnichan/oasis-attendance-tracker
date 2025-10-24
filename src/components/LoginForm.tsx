@@ -11,40 +11,56 @@ import TermsDialog from './TermsDialog';
 const LoginForm: React.FC = () => {
   const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaInput, setCaptchaInput] = useState('');
+  const [captchaCode, setCaptchaCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showTerms, setShowTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(true); // Show T&C first
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const hasAcceptedTerms = localStorage.getItem('termsAccepted');
-    if (!hasAcceptedTerms) {
-      setShowTerms(true);
+  // Generate random captcha code
+  const generateCaptcha = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
     }
+    setCaptchaCode(code);
+    setCaptchaInput('');
+  };
+
+  useEffect(() => {
+    generateCaptcha();
   }, []);
   
   const handleTermsAccept = (dontShowAgain: boolean) => {
     if (dontShowAgain) {
       localStorage.setItem('termsAccepted', 'true');
     }
+    setTermsAccepted(true);
     setShowTerms(false);
   };
 
   const handleTermsDecline = () => {
-    setShowTerms(false);
     toast.error('You must accept the terms to use OASIS');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    const hasAcceptedTerms = localStorage.getItem('termsAccepted');
-    if (!hasAcceptedTerms) {
-      setShowTerms(true);
+    if (!termsAccepted) {
+      toast.error('Please accept the terms and conditions first');
       return;
     }
     
     if (!userId || !password) {
       toast.error('Please fill in all fields');
+      return;
+    }
+    
+    if (captchaInput !== captchaCode) {
+      toast.error('Invalid captcha code');
+      generateCaptcha();
       return;
     }
     
@@ -120,6 +136,45 @@ const LoginForm: React.FC = () => {
             <p className="text-xs text-muted-foreground mt-1">
               Your credentials are not stored by this application.
             </p>
+          </div>
+          
+          <div className="space-y-2">
+            <label htmlFor="captcha" className="text-sm font-medium">
+              Enter Captcha
+            </label>
+            <div className="space-y-3">
+              <div className="bg-muted p-4 rounded-lg border-2 border-border flex items-center justify-between">
+                <div 
+                  className="font-mono text-2xl font-bold tracking-wider select-none"
+                  style={{
+                    fontFamily: 'Courier New, monospace',
+                    letterSpacing: '0.3em',
+                    textDecoration: 'line-through wavy',
+                    textDecorationColor: 'hsl(var(--primary))',
+                    color: 'hsl(var(--foreground))',
+                  }}
+                >
+                  {captchaCode}
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={generateCaptcha}
+                  className="ml-2"
+                >
+                  Change
+                </Button>
+              </div>
+              <Input
+                id="captcha"
+                placeholder="Enter the captcha code"
+                value={captchaInput}
+                onChange={(e) => setCaptchaInput(e.target.value)}
+                disabled={isLoading}
+                className="transition-all duration-300 focus:ring-2 focus:ring-offset-2 focus:ring-primary font-mono tracking-wider"
+              />
+            </div>
           </div>
         </form>
       </CardContent>
